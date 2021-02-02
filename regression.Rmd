@@ -1,0 +1,85 @@
+---
+title: "Review of regression in R"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+```{r, message = FALSE}
+library(tidyverse)
+# two packages that make it easier to work with output from regression models
+library(pander)
+library(broom)
+```
+
+# HERS data
+The data used here were collected from the heart and estrogen/progestin study (HERS), in which a clinical trial of hormone therapy (HT) was conducted for prevention of recurrent heart attacks and death among 2,763 post-menopausal women with existing coronary heart
+disease (CHD). 
+
+Reading in the data, and removing missing values: 
+```{r}
+hers_na <- read.csv("data/hers.csv", header = TRUE)
+hers <- na.omit(hers_na)
+```
+
+# Some exploratory plots
+
+SBP plotted against age
+```{r, message = FALSE}
+ggplot(data = hers, mapping = aes(x = age, y = SBP)) + 
+  geom_point(size = 0.5, alpha = 0.5)
+```
+
+Now using jittering and adding a smoother
+```{r, message = FALSE}
+ggplot(data = hers, mapping = aes(x = age, y = SBP)) + 
+  geom_point(size = 0.5, alpha = 0.5, position = "jitter") +
+  geom_smooth(method = "loess", color = "red")  #adding a smooth line
+```
+
+# Regression model 
+
+Example 1: simple linear regression
+```{r}
+mod <- lm(SBP ~ age, data = hers)
+```
+
+Easy ways to get information on the fitted model:
+Using pander
+```{r}
+mod %>% pander
+```
+
+Or, if you want the output as a tibble:
+```{r}
+mod %>% tidy()
+```
+
+Showing model fit using geom_smooth option
+```{r, message = FALSE}
+ggplot(data = hers, mapping = aes(x = age, y = SBP)) + 
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "lm", color = "red")  #adding a regression line
+```
+# Example of binary outcome data using WCGS data
+
+Read the data
+```{r}
+wcgs <- read.csv("data/wcgs.csv", header = TRUE) %>%
+  mutate(chd = ifelse(chd69 == "No", 0, 1))
+```
+
+Plot
+```{r}
+ggplot(data = wcgs, mapping = aes(x = age, y = chd)) + 
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "loess", color = "red")  
+```
+
+```{r}
+logitreg <- glm(chd ~ age, data = wcgs, family = binomial)
+logitreg
+#must include the family option which indicates the probability distribution
+summary(logitreg) %>% pander
+```
