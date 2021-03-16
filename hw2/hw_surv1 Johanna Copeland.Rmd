@@ -1,0 +1,220 @@
+---
+title: "Hw2"
+author: "Johanna Copeland"
+date: "2/26/2021"
+output: pdf_document
+---
+```{r}
+library(tidyverse)
+library(eventtimedata)
+library(survival)
+```
+
+Problem 1: The simulated trial has the following characteristics:
+- Participants will enter at a constant rate (i.e., uniform entry) beginning on January 1, 2021; enrollment
+will end 3 years later on December 31, 2023. Assume that enrollment time is measured in months.
+Assume that the entry times will be uniformly distributed over the enrollment period. Note that the dates are not as important as the length of the enrollment period.
+- Data collection will end and the data will be analyzed after 1 year of follow-up since the completion of enrollment. This is to ensure that the last patient enrolled will be followed for at least 1 year.
+- Assume that the trial will enroll a total of 200 participants.
+- Assume this is a simple trial with only one treatment (i.e., one group).
+- Assume that the failure time since entry follows an exponential distribution with rate lamda= 0.04. Assume that failure times are measured in months.
+- Assume that the only form of censoring will be administrative censoring; censoring will happen only for participants whose death has not been observed by the end of the data collection period.
+
+The most efficient way to simulate the dataset is to, for each case, sample a uniformly distributed entry time and sample failure time from an exponential distribution, then use these to calculate the other items needed.
+
+
+
+a) Compute the median survival time of the underlying (known) distribution (i.e., the exponential distribution with rate lamda = 0.04)
+S(t)= exp(-lamda*t)
+0.5 = exp(-0.04*t)
+ln(0.5) = -0.04*t
+t= ln(0.5)/-0.04
+t = 17.3
+
+
+b) Run the simulation and check that the simulation behaves as expected by estimating the median
+survival time. Compare the estimated median survival time with the median survival time computed
+in (a).
+
+ft is failure time
+et is enter time
+t is time in study
+```{r}
+set.seed(1234)
+
+ft <- rexp(200, 0.04)
+et <- runif(200, min = 0, max = 36)
+t <- ft+et
+c <- 48
+x <- pmin(t, c)
+survtime <- (x - et)
+
+#coded 0 for death that hasn't been observed by end of study. 1 for else
+death <- rep(1, length(t))
+for (i in 1:length(t)){
+  if (t[i] > 48){
+   death[i] = 0
+  }
+}
+
+```
+
+
+```{r}
+(simdat <- as.data.frame(cbind(et,x,death)))
+
+KM <- survfit(Surv(survtime, death) ~ 1, data = simdat)
+
+KM
+```
+
+The median survival time is 19 months for my simulation. There is a 2 month difference between my simulation and the median survival time calculated in part a.
+
+
+c) Use the nonparametric estimation method (e.g., the Kaplan–Meier estimator) to plot the survival curve. Since the parameters of the survival distribution in the simulation are known, we can do a graphical comparison with the underlying distribution. Add the (known) survival distribution to the figure. Comment on the appearance of the survival curves.
+
+```{r}
+KM <- survfit(Surv(survtime, death) ~ 1, data = simdat)
+
+r <- seq(from = 1, to = 200)
+exp <- exp(-0.04*r)
+plot(KM, mark.time = TRUE, conf.int = FALSE, xlim=c(0,48))
+lines(exp, col="green")
+
+```
+ANS: The two curves are very similar in appearance. The expoential function seems to be a good fit for the simulation data.  
+
+
+Problem 2: 
+Installing packages:
+```{r}
+#install.packages("devtools")
+#library(devtools)
+#install.packages(c("survival", "km.ci", "KMsurv", "gsDesign", "Hmisc"))
+#devtools::install_github("dave-harrington/eventtimedata")
+```
+
+Loading Data
+```{r}
+data(nursing.home)
+```
+
+
+(a) Using the Kaplan–Meier estimator, provide a graph of the estimated survival function for length of stay for each of the two groups defined by the intervention variable rx. Length of stay is the variable stay, and the indicator for discharge is the numeric variable cens.
+```{r}
+KM2 <- survfit(Surv(stay, cens) ~ rx, data = nursing.home)
+
+plot(KM2, lty = 2:3, mark.time = TRUE, xlab = "Days", ylab = "Survival Function", col=c("red", "blue")) 
+legend(x = 600, y = 1, legend=c("Control", "Intervention"), col=c("red", "blue"), lty=1:2, cex=0.8)
+
+```
+
+```{r, echo = FALSE}
+data("cox.oakes.leukemia")
+leukemia.remission <- survfit(Surv(time, relapse) ~ group,
+data = cox.oakes.leukemia)
+plot(leukemia.remission, lty = 2:3, mark.time = TRUE, xlab = "Weeks",
+ylab = "Survival Function",col=c("red", "blue"))
+```
+
+
+b) Comment on the appearance of the survival curves produced in (a). Why are the length of the two curves different?
+
+ANS: The length of the two curves are different because the last person in the intervention group left the nursing home whereas the last person in the control group stayed until the end of the study duration.
+
+
+
+c) Estimate the median survival time for each group. Compare them based on their 95% confidence
+intervals.
+```{r}
+KM2
+```
+ANS: The summary above shows the median survival time (number of days stayed) for the Control group is 108 days and is 123 for the Intervention group. 
+95% of the time, the true median survival time for the control group will lie between 92 and 127 days and 95% of the time, the true median survival time for the intervention group will lie between 100 and 156 days. The interval is wider for the Intervention group than the Control group, however they both overlap in containing values ranging from 100-127 days. Since the two confidence intervals overlap, they can be said to not show a significant difference between the two groups.
+
+
+d) Estimate the survival rate at time = 100 days and the 95% confidence intervals for each group. Compare the estimated survival rates based on their 95% confidence intervals.
+```{r}
+KM2sum <- summary(KM2)
+
+
+(est.surv = summary(KM2, time = 100))
+```
+When t = 100, the estimated survival function for the control is 0.510 and the confidence interval is between (0.478, 0.544). The interval (0.478, 0.544) will contain the true survival rate at 100 days with 95% confidence for the control group.
+when t = 100, the estimated survival function for the intervention group is 0.534 and the confidence interval is between. The interval (0.498, 0.572) will contain the true survival rate at 100 days with 95% confidence for the intervention group. 
+Both intervals contain overlapping values of 0.498 to 0.544; this indicates the two groups are likely not significantly different.
+
+```{r echo= FALSE}
+#Extra work, not needed but good to have somewhere
+intervention.dat <- nursing.home %>% 
+  filter(rx == "Intervention")
+
+
+KM2.intervention <- survfit(Surv(stay, cens) ~ 1, data = intervention.dat)
+print(KM2.intervention)
+
+summary(KM2.intervention)
+
+
+#for control group
+control.dat <- nursing.home %>% 
+  filter(rx == "Control")
+
+
+KM2.control <- survfit(Surv(stay, cens) ~ 1, data = control.dat)
+print(KM2.control)
+
+summary(KM2.control)
+
+max(KM2.control$time)
+max(KM2.intervention$time)
+```
+
+
+
+
+
+Problem 3: 
+Load data
+```{r}
+data(lymphoma.prognosis)
+```
+
+a) Estimate the survival probability by status of bulky disease. Bulky disease is coded in the numeric variable BULK, with 1 denoting not present and 2 denoting present. Be careful about the coding of the status variable SURVIVAL. Display the estimated survival curves.
+
+```{r}
+#SURVIVAL description: Numeric; status of survival. 1 = alive, 2 = dead, 3 = lost to follow-up.
+died <- lymphoma.prognosis$SURVIVAL - 1
+died[died == 2] = 0 #recoding those lost to follow-up as censored
+lymphoma.prognosis$died <- died
+
+
+#survfn, Kapple Meir est for status of bulky disease
+(KM3 <- survfit(Surv(SURVTIME, died) ~ BULK, data = lymphoma.prognosis))
+
+#plot the curves
+plot(KM3, lty = 2:3, mark.time = TRUE, xlab = "Years", ylab = "Survival Function", col=c("red", "blue")) 
+legend(x = 6, y = 1, legend=c("No Bulky Disease", "Bulky Disease"), col=c("red", "blue"), lty=1, cex=0.8)
+```
+b) Do the data appear to satisfy the proportional hazards assumption?
+ANS: No because the survival curves appear to overlap at around 5 years. 
+
+
+c)  Using a log-rank statistic, test for significant differences in survival in patients with bulky disease versus those who do not have bulky disease. State precisely the null and alternative hypotheses that are being tested. Interpret the outputs.
+```{r}
+survdiff(Surv(SURVTIME, died) ~ BULK, data = lymphoma.prognosis)
+```
+H0 is beta1 = 0 The survival rate in patients who have bulky disease and those who don't is the same
+HA is beta1 != 0 the survival rate in patients who have bulky disease and those who don't is not the same
+
+Since the p value is > 0.05, we fail to reject the null and say that the survival rate in patients who have bulky disease and those who don't is the same. 
+
+d) The validity of the p-value from a log-rank test does not require that the data satisfy proportional hazards, but the test does lose power for some settings in which the hazards are not proportional. Comment on the effect of absence of proportional hazards on the outcome of the test.
+ANS: When the power of the test decreases, we are more likely to fail to reject a null hypothesis that is actually false. In this situation, we failed to reject a null hypothesis and since the data does not satisfy the proportional hazards, this likely increased the p-value to a point where we failed to reject the null. 
+
+e) In the Fleming–Harrington tests, setting the parameters rho = 1, gamma = 0 produces a generalized Wilcoxon test which emphasizes early differences. Re-do part (c) with such a test. How does it change the outcome? Explain why.
+```{r}
+survdiff(Surv(SURVTIME, died) ~ BULK, data = lymphoma.prognosis, rho = 1)
+```
+ANS: After running the Fleming-Harrington tests by setting rho = 1 and gamma = 0, this puts weight to the earlier differences, which would make sense in the situation since there are clear differences in the curves before the half way point. The p-value on the Fleming Harrington test is < 0.01 which means we reject the null hypothesis and conclude there's enough evidence to prove the survival time for patients with and without Bulky disease is the same. 
+

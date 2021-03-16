@@ -1,0 +1,182 @@
+---
+title: "Hw2-Surv"
+author: "Johanna Copeland"
+date: "3/7/2021"
+output: pdf_document
+---
+
+Problem 1: In this problem, we step through some analyses of the trial. We are interested in examining the effect of treatment on time to death
+```{r}
+library(tidyverse)
+library(eventtimedata)
+library(survival)
+```
+
+
+
+a) Recode the treatment variables to avoid any confusion. Either create three binary variables (one for each treatment arm), or create a single factor variable with three levels. Produce a table to confirm that the new coding is correct. 
+Load data: 
+```{r}
+data(mac)
+```
+
+recode treatment
+```{r}
+treatment <- rep(NA, length(mac$rif))
+for (i in 1:length(treatment)){
+  if (mac$rif[i] == 1){
+    treatment[i] = 1
+}
+  if (mac$clari[i] == 1){
+    treatment[i] = 2
+}
+  if (mac$clari[i] == 0 & mac$rif[i] == 0){
+    treatment[i] = 3
+}
+}
+mac$treatment <- treatment
+table <- as.data.frame(cbind("rif" = mac$rif, "clari" = mac$clari, "treatment" = mac$treatment))
+
+head(table, 10)
+
+```
+ANS: We can see from the table that my code created the proper output for the treatment groups based on the definitions given in the problem. 
+
+
+b) Explore the distribution of time to death with relevant numerical and graphical summaries by treatment. That is, estimate the median survival time and the 95% confidence interval and plot a survival curve for each treatment. Describe what you see.
+```{r}
+KM.mac <- survfit(Surv(dthtime, dthstat) ~ treatment, data = mac)
+
+KM.mac
+
+plot(KM.mac, mark.time = TRUE, xlab = "Days", ylab = "Survival Function", col=c("red", "blue", "purple")) 
+legend(x = 600, y = 1, legend=c("rif", "clari", "Both"), col=c("red", "blue"), lty=1, cex=0.8)
+```
+The median survival times for the rif treatment is 712 days, for clari treatment it is 731 days and both is 684 days. The confidence interval for treatment 1 is (672, NA) days, for clari it is (677, NA) days, and for both it is (631, NA) days. The reason why there is NA in the upper bounds is because it is out of scope of the study duration, meaning the event did not occur within the given timeframe. The three survival curves are plotted on the same graph and appear to be overlapping and very similar. 
+
+
+
+c) Using a proportional hazards model, calculate an overall test statistic for differences in time to death among the three treatments, without adjusting for any other covariates. Summarize your findings. Be sure to include a statement of what the null and alternative hypotheses are for the test.
+```{r}
+coxph(Surv(dthtime, dthstat) ~ as.factor(treatment), data = mac)
+```
+
+
+The overall test statistic for difference in time to death among the three treatments is 0.67 with a p-value of 0.4143. 
+H0: beta's = 0. The survival curves are the same, meaning the treatments do not differ
+Ha: not all beta's =! 0. At least one beta does not = 0 which means they are not all the same and at least one treatment differs from the baseline treatment (rif).  
+
+We see that since the pvalue is > 0.05, we fail to reject the null and can conclude that there's enough evidence for = 0, in that there is no difference in the treatment groups. 
+
+
+
+
+d) Repeat the analysis in part (c) using a three sample log-rank test. In this approach, what do the p-value and test statistic for differences among the three treatments correspond to in the analysis from part (c)?
+
+```{r}
+#log rank test
+KM <- survdiff(Surv(dthtime, dthstat) ~ as.factor(treatment), data = mac)
+KM
+```
+
+ANS: The log rank is referring to if the three survival curves are the same. In part c, we were looking to see if the treatments had an effect on the survival curve when comparing to the rif treatment group. 
+From the output above, we notice that since the p-value > 0.05, we fail to reject the null to conclude that there is enough evidence to show that the 3 survival curves are the same. 
+
+
+e) What is the estimated survival rate at 230 days for each treatment group?
+```{r}
+(est.surv = summary(KM.mac, time = 230))
+```
+The estimated survival rate at 230 days for rif treatment is 0.9117, For clari treatment it is 0.9319 and for both it is 0.9157. 
+
+f) Assess the assumption of proportional hazards for the three treatment groups by creating a plot of log[-log(st)] for each of the three treatments by adding fun = "cloglog" in the plot.survfit function. How should these plots look if the the proportional hazards assumption is approximately correct? Is the proportional hazards assumption valid?
+
+```{r}
+plot(KM.mac, mark.time = TRUE, xlab = "Days", ylab = "Survival Function", col=c("red", "blue", "purple"), fun = "cloglog") 
+legend(x = 6, y = -3, legend=c("rif", "clari", "Both"), col=c("red", "blue"), lty=1, cex=0.8)
+```
+
+ANS: It is violated here since they overlap and appear to converge as the days(x-axis) increases. If the protional hazards assumption held, the survival curves would not overlap or cross over. 
+
+
+Problem 2: 
+a) Fit a Cox PH model to time to death including the following variables: age, sex, karnof, antiret, cd4cat, and your treatment variable(s). Present the outputs.
+
+
+```{r}
+COX2 <- coxph(formula =Surv(dthtime, dthstat) ~ age + sex + karnof + antiret + cd4cat + as.factor(treatment), data = mac)
+
+COX2
+
+min(mac$age)
+
+```
+b) How is the “baseline” group defined in this model, in terms of the covariates? Does the baseline group correspond to any of the observations in the dataset?
+ANS: The baseline group in this model is 0 year old male, 0 score on karnof, no antiretroviral use, and a less than 25 Cd4 cell count. This is because it corresponds with the baseline hazard function, as in all the covariates are equal to zero. This does not correspond to any of the observations in this dataset since the minimum age in this dataset is 12. 
+
+
+
+
+c) Do the results from this model change the earlier conclusion about the possible differences among the three treatments?
+ANS: Since the p-values for the treatment groups were still > 0.05, we can say that the treatment does not have an effect on the model and our results are not different.
+
+d) Fit the Cox PH model again after excluding your treatment variable(s). Use the likelihood ratio test statistics to examine whether treatment is significantly associated with time to death.
+```{r}
+COX2.d <- coxph(formula =Surv(dthtime, dthstat) ~ age + sex + karnof + antiret + cd4cat, data = mac)
+
+COX2.d
+anova(COX2, COX2.d)
+
+```
+The p-value is greater than 0.05 so we can say that treatment is not significantly associated with death time and therefore can be dropped from the model. 
+
+
+e) What is the estimated hazard ratio for death associated with a higher CD4 count,adjusting for all other covariates? Give a 95% confidence interval for the hazard ratio for cd4cat, adjusting for the other covariates, and provide a verbal interpretation of the confidence interval for a non-statistician. 
+
+```{r}
+COX2
+summary(COX2)$conf.int
+```
+
+The estimated hazard ratio for cd4cat when adjusting for all other covariates is 0.5726. The 95% confidence interval is 0.4789082 to 0.6848245. Since the interval does not contain one, we can say with 95% confidence that cd4cat is not statistically significantly associated with death. 
+
+
+f) What is the interpretation of the estimated hazard ratio for age? What is the estimated hazard ratio for death for a subject aged 45 years versus a subject aged 30 years, holding all other covariates constant?
+ANS: Since the estimated hazard ratio for age is 0.9786246, that means that age is statistically associated with death when all other covariates are accounted for. 
+Approcimately 2.2% increase per 1 year of age so for a person aged 45 years, we would say their estimated hazard ratio is .9 and 30 year old adult is about .6. 
+
+
+Problem 3: 
+a) Fit a Cox PH model that includes only the variable sex. Plot log[-log(st)] to examine whether the PH assumption holds for sex. 
+```{r}
+COX3 <- coxph(formula = Surv(dthtime, dthstat) ~ sex, data = mac)
+
+sex_df <- with(mac,
+               data.frame(sex = c(0, 1)))
+KM3 <- survfit(Surv(dthtime, dthstat) ~ sex, data = mac)
+
+plot(KM3, mark.time = TRUE, xlab = "Days", col = c("red", "blue"), ylab = "Survival Function", fun = "cloglog", conf.int = F)
+
+```
+The PH assumptions do not hold since the curves cross over.
+
+b) Use the scaled Schoenfeld residuals to examine the proportional hazards assumption for sex. Does this approach suggest the same conclusion as the one from part (a)?
+```{r}
+mac.zph = cox.zph(COX3)
+
+
+plot(mac.zph, col = "red",
+cex = 0.6, cex.lab = 0.8, cex.main = 0.8)
+
+
+```
+ANS: The proportional hazards assumption holds because the red line appears to be horizontal.
+
+c) Use the cox.zph function to explore the PH assumption for all the variables in the full model fit from Problem 2, and describe the results.
+
+
+```{r}
+macfull.zph = cox.zph(COX2)
+macfull.zph
+```
+ANS: We see that the p-value is less than 0.05, we can say that the proportional hazard assumptions was violated. From the other p-values, it is violated for the karnof variable which has a very small p-value. 

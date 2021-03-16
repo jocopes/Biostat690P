@@ -1,0 +1,493 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+  \usepackage{amssymb}
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Hw1-MLE},
+  pdfauthor={Johanna Copeland},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifluatex
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Hw1-MLE}
+\author{Johanna Copeland}
+\date{2/12/2021}
+
+\begin{document}
+\maketitle
+
+Load in data
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{AD }\OtherTok{\textless{}{-}} \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"../data/AD.csv"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## -- Column specification --------------------------------------------------------
+## cols(
+##   y = col_double(),
+##   x = col_double()
+## )
+\end{verbatim}
+
+Question \#4) Implementation of Newton's method on a logistic regression
+model in R software. Investigators are interested in assessing the
+association between the baseline cognitive dysfunction and the risk of
+Alzheimer's disease. In the AD data set (AD.csv file), the investigators
+collected a random sample of n = 400 participants of an Alzheimer's
+disease study. The variables in the data set include standardized
+baseline cognitive dysfunction measurement (the column named x) and the
+diagnosis of Alzheimer's disease (the column named y). As a statistical
+consultant, you would like to use a logistic regression model to analyze
+the data, where the response variable Y is the diagnosis of Alzheimer's
+disease (1=diagnosis of Alzheimer's disease, 0=no Alzheimer's disease),
+and the independent variable X is the standardized baseline cognitive
+dysfunction measurement (the higher, the worse).
+
+\begin{enumerate}
+\def\labelenumi{\alph{enumi})}
+\tightlist
+\item
+  Summarize the two variables in the data set based on commonly used
+  summary statistics. What is the proportion of Alzheimer's disease p0
+  in this sample?
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{table}\NormalTok{(AD}\SpecialCharTok{$}\NormalTok{y)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##   0   1 
+## 281 119
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(AD)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##        y                x           
+##  Min.   :0.0000   Min.   :-2.88892  
+##  1st Qu.:0.0000   1st Qu.:-0.57510  
+##  Median :0.0000   Median :-0.02664  
+##  Mean   :0.2975   Mean   : 0.03809  
+##  3rd Qu.:1.0000   3rd Qu.: 0.69590  
+##  Max.   :1.0000   Max.   : 2.64917
+\end{verbatim}
+
+The proportion with Alzheimer's disease in the sample is 119/400 or
+29.75\%
+
+\begin{enumerate}
+\def\labelenumi{\alph{enumi}.}
+\setcounter{enumi}{1}
+\tightlist
+\item
+  Write out the logistic regression model for this data set, using α and
+  β to represent the intercept and the regression coefficient of X.
+\end{enumerate}
+
+ln(p/(1-p)) = alpha- beta(x)
+
+\begin{enumerate}
+\def\labelenumi{\alph{enumi}.}
+\setcounter{enumi}{2}
+\tightlist
+\item
+  alpha.0 = ln(p/(1-p)) = ln(0.2975/ (1-0.2975)) = -0.8592 beta.0 = 0
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\roman{enumi})}
+\tightlist
+\item
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{score.fun}\OtherTok{\textless{}{-}}\ControlFlowTok{function}\NormalTok{(a0, a1, dat)\{}
+\DocumentationTok{\#\#\#input variables }
+\CommentTok{\#a0: the estimate for beta0}
+\CommentTok{\#a1: the estimate for beta1}
+\CommentTok{\#dat: the data set}
+\NormalTok{ n}\OtherTok{\textless{}{-}}\FunctionTok{nrow}\NormalTok{(dat)}
+\NormalTok{ x.mat}\OtherTok{\textless{}{-}}\FunctionTok{as.matrix}\NormalTok{(}\FunctionTok{cbind}\NormalTok{(}\FunctionTok{rep}\NormalTok{(}\DecValTok{1}\NormalTok{,n), dat}\SpecialCharTok{$}\NormalTok{x)) }\CommentTok{\#n x 2 design matrix}
+\NormalTok{ beta}\FloatTok{.0}\OtherTok{\textless{}{-}}\FunctionTok{as.matrix}\NormalTok{(}\FunctionTok{c}\NormalTok{(a0, a1), }\DecValTok{2}\NormalTok{,}\DecValTok{1}\NormalTok{) }\CommentTok{\#2x1 regression coefficent vector}
+\NormalTok{ p}\OtherTok{\textless{}{-}}\DecValTok{1}\SpecialCharTok{/}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\FunctionTok{exp}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{x.mat}\SpecialCharTok{\%*\%}\NormalTok{beta}\FloatTok{.0}\NormalTok{))}
+ \CommentTok{\#output score function, 2x1 vector}
+\NormalTok{ lkhd.score}\OtherTok{=}\FunctionTok{t}\NormalTok{(x.mat)}\SpecialCharTok{\%*\%}\NormalTok{(dat}\SpecialCharTok{$}\NormalTok{y }\SpecialCharTok{{-}}\NormalTok{ p) }\CommentTok{\#likelihood score function}
+\NormalTok{ obs.info}\OtherTok{=}\FunctionTok{t}\NormalTok{(x.mat)}\SpecialCharTok{\%*\%}\NormalTok{(x.mat}\SpecialCharTok{*}\FunctionTok{cbind}\NormalTok{(p}\SpecialCharTok{*}\NormalTok{(}\DecValTok{1}\SpecialCharTok{{-}}\NormalTok{p), p}\SpecialCharTok{*}\NormalTok{(}\DecValTok{1}\SpecialCharTok{{-}}\NormalTok{p))) }\CommentTok{\#observed information}
+\NormalTok{ current }\OtherTok{\textless{}{-}} \FunctionTok{rbind}\NormalTok{(a0, a1)}
+\CommentTok{\#output the likelihood score and observed information as a list }
+ \CommentTok{\#list(lkhd.score=lkhd.score, obs.info=obs.info)}
+\NormalTok{ plus1 }\OtherTok{\textless{}\textless{}{-}}\NormalTok{ current }\SpecialCharTok{+} \FunctionTok{inv}\NormalTok{(obs.info)}\SpecialCharTok{\%*\%}\NormalTok{lkhd.score}
+\NormalTok{ ans }\OtherTok{\textless{}\textless{}{-}}\NormalTok{ plus1 }\SpecialCharTok{{-}}\NormalTok{ current}
+ \FunctionTok{print}\NormalTok{(ans)}
+\NormalTok{\}}
+
+
+\CommentTok{\#v = 0}
+\FunctionTok{score.fun}\NormalTok{(}\AttributeTok{a0 =} \SpecialCharTok{{-}}\FloatTok{0.8592}\NormalTok{, }\AttributeTok{a1 =} \DecValTok{0}\NormalTok{, }\AttributeTok{dat =}\NormalTok{ AD)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##           [,1]
+## a0 -0.01812689
+## a1  0.47509569
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{(}\FunctionTok{max}\NormalTok{(ans[}\DecValTok{1}\NormalTok{,], ans[}\DecValTok{2}\NormalTok{,]) }\SpecialCharTok{\textgreater{}} \DecValTok{10}\SpecialCharTok{\^{}{-}}\DecValTok{7}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#v = 1}
+\FunctionTok{score.fun}\NormalTok{(}\AttributeTok{a0 =} \SpecialCharTok{{-}}\FloatTok{0.8773269}\NormalTok{, }\AttributeTok{a1 =} \FloatTok{0.4750957}\NormalTok{, }\AttributeTok{dat =}\NormalTok{ AD)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##           [,1]
+## a0 -0.04606738
+## a1  0.02476840
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{(}\FunctionTok{max}\NormalTok{(ans[}\DecValTok{1}\NormalTok{,], ans[}\DecValTok{2}\NormalTok{,]) }\SpecialCharTok{\textgreater{}} \DecValTok{10}\SpecialCharTok{\^{}{-}}\DecValTok{7}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#v = 2}
+\FunctionTok{score.fun}\NormalTok{(}\AttributeTok{a0 =} \SpecialCharTok{{-}}\FloatTok{0.9233943}\NormalTok{, }\AttributeTok{a1 =} \FloatTok{0.4998641}\NormalTok{, }\AttributeTok{dat =}\NormalTok{ AD)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##             [,1]
+## a0 -0.0007251897
+## a1  0.0006981776
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{(}\FunctionTok{max}\NormalTok{(ans[}\DecValTok{1}\NormalTok{,], ans[}\DecValTok{2}\NormalTok{,]) }\SpecialCharTok{\textgreater{}} \DecValTok{10}\SpecialCharTok{\^{}{-}}\DecValTok{7}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# v = 3}
+\FunctionTok{score.fun}\NormalTok{(}\AttributeTok{a0 =} \SpecialCharTok{{-}}\FloatTok{0.9241195}\NormalTok{, }\AttributeTok{a1 =} \FloatTok{0.5005623}\NormalTok{, }\AttributeTok{dat =}\NormalTok{ AD)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##             [,1]
+## a0 -2.593402e-07
+## a1  2.822309e-07
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{(}\FunctionTok{max}\NormalTok{(ans[}\DecValTok{1}\NormalTok{,], ans[}\DecValTok{2}\NormalTok{,]) }\SpecialCharTok{\textgreater{}} \DecValTok{10}\SpecialCharTok{\^{}{-}}\DecValTok{7}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{plus1}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##          [,1]
+## a0 -0.9241198
+## a1  0.5005626
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#v= 4}
+\CommentTok{\#score.fun(a0 = {-}0.9241198, a1 = 0.5005626, dat = AD)}
+\CommentTok{\#(max(ans[1,], ans[2,]) \textgreater{} 10\^{}{-}7)}
+\CommentTok{\#FALSE}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{enumerate}
+\def\labelenumi{(\roman{enumi})}
+\setcounter{enumi}{1}
+\item
+  4 iterations until the algorithm stopped.
+\item
+  The estimate for for alpha is -0.9241198 and the estimate for beta is
+  0.5005626.
+\item
+  p = e\^{}(alpha + betax)/ (1+e\^{}(alpha + betax)) p =
+  e\^{}(-0.9241198 + 0.5005626(1))/ (1+e\^{}(-0.9241198 + 0.5005626(1)))
+  p = 0.3955
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\alph{enumi})}
+\setcounter{enumi}{3}
+\tightlist
+\item
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{score.fun}\OtherTok{\textless{}{-}}\ControlFlowTok{function}\NormalTok{(a0, a1, dat)\{}
+\DocumentationTok{\#\#\#input variables }
+\CommentTok{\#a0: the estimate for beta0}
+\CommentTok{\#a1: the estimate for beta1}
+\CommentTok{\#dat: the data set}
+\NormalTok{ n}\OtherTok{\textless{}{-}}\FunctionTok{nrow}\NormalTok{(dat)}
+\NormalTok{ x.mat}\OtherTok{\textless{}{-}}\FunctionTok{as.matrix}\NormalTok{(}\FunctionTok{cbind}\NormalTok{(}\FunctionTok{rep}\NormalTok{(}\DecValTok{1}\NormalTok{,n), dat}\SpecialCharTok{$}\NormalTok{x)) }\CommentTok{\#n x 2 design matrix}
+\NormalTok{ beta}\FloatTok{.0}\OtherTok{\textless{}{-}}\FunctionTok{as.matrix}\NormalTok{(}\FunctionTok{c}\NormalTok{(a0, a1), }\DecValTok{2}\NormalTok{,}\DecValTok{1}\NormalTok{) }\CommentTok{\#2x1 regression coefficent vector}
+\NormalTok{ p}\OtherTok{\textless{}{-}}\DecValTok{1}\SpecialCharTok{/}\NormalTok{(}\DecValTok{1}\SpecialCharTok{+}\FunctionTok{exp}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{x.mat}\SpecialCharTok{\%*\%}\NormalTok{beta}\FloatTok{.0}\NormalTok{))}
+ \CommentTok{\#output score function, 2x1 vector}
+\NormalTok{ lkhd.score}\OtherTok{=}\FunctionTok{t}\NormalTok{(x.mat)}\SpecialCharTok{\%*\%}\NormalTok{(dat}\SpecialCharTok{$}\NormalTok{y }\SpecialCharTok{{-}}\NormalTok{ p) }\CommentTok{\#likelihood score function}
+\NormalTok{ obs.info}\OtherTok{=}\FunctionTok{t}\NormalTok{(x.mat)}\SpecialCharTok{\%*\%}\NormalTok{(x.mat}\SpecialCharTok{*}\FunctionTok{cbind}\NormalTok{(p}\SpecialCharTok{*}\NormalTok{(}\DecValTok{1}\SpecialCharTok{{-}}\NormalTok{p), p}\SpecialCharTok{*}\NormalTok{(}\DecValTok{1}\SpecialCharTok{{-}}\NormalTok{p))) }\CommentTok{\#observed information}
+\CommentTok{\#output the likelihood score and observed information as a list }
+ \CommentTok{\#list(lkhd.score=lkhd.score, obs.info=obs.info)}
+\NormalTok{ inv.obs.info }\OtherTok{\textless{}{-}} \FunctionTok{inv}\NormalTok{(obs.info)}
+ \FunctionTok{list}\NormalTok{(}\AttributeTok{lkhd.score=}\NormalTok{lkhd.score, }\AttributeTok{obs.info=}\NormalTok{obs.info, }\AttributeTok{inv.obs.info =}\NormalTok{ inv.obs.info)}
+\NormalTok{\}}
+
+\FunctionTok{score.fun}\NormalTok{(}\AttributeTok{a0 =} \SpecialCharTok{{-}}\FloatTok{0.9241195}\NormalTok{, }\AttributeTok{a1 =} \FloatTok{0.5005623}\NormalTok{, }\AttributeTok{dat =}\NormalTok{ AD)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## $lkhd.score
+##               [,1]
+## [1,] -1.587911e-05
+## [2,]  1.567626e-05
+## 
+## $obs.info
+##          [,1]     [,2]
+## [1,] 79.83338 17.09553
+## [2,] 17.09553 71.25305
+## 
+## $inv.obs.info
+##             [,1]        [,2]
+## [1,]  0.01320451 -0.00316812
+## [2,] -0.00316812  0.01479460
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{sqrt}\NormalTok{(}\FloatTok{0.01320451}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.1149109
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{sqrt}\NormalTok{(}\FloatTok{0.01479460}\NormalTok{) }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.1216331
+\end{verbatim}
+
+The standard errors for alpha and beta are sqrt(0.01320451) = 0.1149109
+and sqrt(0.01479460) = 0.1216331 respectively. The obserserved
+information matrix is printed above under obs.info and the
+variance-covariance matrix is the inv.obs.info matrix.
+
+\begin{enumerate}
+\def\labelenumi{\alph{enumi})}
+\setcounter{enumi}{4}
+\tightlist
+\item
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{(logreg }\OtherTok{\textless{}{-}} \FunctionTok{glm}\NormalTok{(y }\SpecialCharTok{\textasciitilde{}}\NormalTok{ x, }\AttributeTok{family=}\StringTok{"binomial"}\NormalTok{, }\AttributeTok{data =}\NormalTok{ AD))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:  glm(formula = y ~ x, family = "binomial", data = AD)
+## 
+## Coefficients:
+## (Intercept)            x  
+##     -0.9241       0.5006  
+## 
+## Degrees of Freedom: 399 Total (i.e. Null);  398 Residual
+## Null Deviance:       487 
+## Residual Deviance: 468.8     AIC: 472.8
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(logreg)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## glm(formula = y ~ x, family = "binomial", data = AD)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -1.2770  -0.8786  -0.7147   1.2835   2.0764  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)  -0.9241     0.1149  -8.042 8.83e-16 ***
+## x             0.5006     0.1216   4.115 3.87e-05 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 486.98  on 399  degrees of freedom
+## Residual deviance: 468.81  on 398  degrees of freedom
+## AIC: 472.81
+## 
+## Number of Fisher Scoring iterations: 4
+\end{verbatim}
+
+The estimate for alpha is -0.9241 and the estimate for beta is 0.5006.
+These are the same as the estimates I found using the Newton Method
+above. The standard errors are the also the same I found in part d,
+those being: 0.1149 for alpha and 0.1216 for beta.
+
+\end{document}
