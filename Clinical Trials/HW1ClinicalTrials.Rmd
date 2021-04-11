@@ -1,0 +1,94 @@
+---
+title: "HW1ClinicalTrials"
+author: "Johanna Copeland"
+date: "3/21/2021"
+output: pdf_document
+---
+
+Problem 1: Consider the setting of a cardiovascular disease clinical trial conducted to compare the efficacy of two treatments in reducing the incidence of coronary heart disease (CHD)
+The outcome of interest is time from entry into the study to a diagnosis with CHD. Assume the following: 
+
+- The time-to-event of interest T is distributed according to an exponential distribution with parameters lambda0 and lambda1 in treatment groups 0 and 1, respectively.
+
+- The median survival time in treatment group 0 is 6 years and that in treatment group 1 is 9 years
+
+- A constant accrual rate of 120 subjects per year into your study
+Assuming that you would allocate subjects equally to both treatment groups, that the type I error rate is 0.05, power is 90%:
+
+
+1)  How many events are needed to satisfy the desired power of 90%?
+
+```{r}
+#critical values
+ZA2 <- abs(qnorm(p = .025, lower.tail = TRUE))
+ZB <- abs(qnorm(p = 0.1, lower.tail = TRUE))
+
+#hazard ratio
+(lambda0 <- log(2)/6)
+(lambda1 <- log(2)/9)
+HR <- lambda1/lambda0
+
+(d <- (4*(ZA2+ZB)^2)/log(HR)^2)
+
+```
+
+The number of events needed to satisfy the desired power of 90% is approximately 256.
+
+
+2) Assuming that there is no additional follow-up in the study (i.e. A = L), what is the number of subjects you would recruit into your study? How long would you plan for total follow up (i.e. L)?
+```{r}
+L <- 7.48079
+(events <- 60*(L - (exp(-0.1155245*L)/0.1155245)*(exp(0.1155245*L)- 1))+ 60*(L - (exp(-0.07701635*L)/0.07701635*(exp(0.07701635*L)- 1))))
+                                                                        
+```
+then L = 7.48 years, the events equation is 256. I got this by solving for L in the above equation
+
+So we would need to recruit 
+
+3) Assume that accrual would take 3 years (i.e. A = 3). Plot the total expected number of events in the study as a function of study length (L) in years.
+```{r}
+curve(60*(3 - (exp(-0.1155245*x)/0.1155245)*(exp(0.1155245*3)- 1))+ 60*(3 - (exp(-0.07701635*x)/0.07701635*(exp(0.07701635*3)- 1))), from = 0, to = 20, ylab = "Total Expected Number of Events", xlab ="Length of Study (Years)") 
+abline(h = 256, lty = "dashed")
+
+```
+
+
+4) Assume that you would allocate subjects to treatment groups in the 1:4 ratio. How many events are needed to satisfy the desired power of 90%?
+```{r}
+(d2 <- (ZA2+ZB)^2/(0.2*(1-0.2)*log(HR)^2))
+
+```
+
+Approximately 400 events are needed to satisfy the desired power of 90% with subjects being allocated into the treatment groups in a 1:4 ratio. 
+
+
+Problem 2) Consider a clinical trial comparing the efficacy of two cholesterol lowering drugs, A and B. 
+1. Find the sample size necessary to detect a difference in mean cholesterol levels. Delta = 60 mg/ml. standard deviation = 200 mg/ml. Assume a two-sided, 0.05 significance level and power of 80%. Use the function power.t.test in R
+
+
+```{r}
+?power.t.test
+power.t.test(delta= 60, sd = 200, power = .8, sig.level = 0.05, alternative = "two.sided")
+```
+The sample size needed would be 176. 
+
+2. Using same setting as above, assume delta varies between 30 mg/ml and 90 mg/ml. plot power curve and interpret findings. 
+```{r}
+p2b <- power.t.test(n = 175.3851, delta= seq(30, 90,by=0.1), sd = 200, sig.level = 0.05, alternative = "two.sided")
+
+plot(p2b$power)
+```
+We see that power is the highest when the delta is higher and this is because it is more easy to detect a difference. 
+
+
+
+3. Assume standard deviation varies 100 and 300 mg/ml. plot power curve and interpret findings.
+```{r}
+p2c <- power.t.test(n = 175.3851, delta= 60, sd = seq(100,300,by= 1), sig.level = 0.05, alternative = "two.sided")
+
+plot(p2c$power)
+```
+The power decreases as standard deviation increases because it is easier to reject the null hypothesis (easier to detect a difference) when the standard deviation is higher.
+
+
+

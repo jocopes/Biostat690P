@@ -1,0 +1,79 @@
+---
+title: "Bayes for BIOSTATS690P: Getting set up"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+Goals: 
+
+- install R package brms and a C++ compiler
+- test that your installation is working 
+
+
+
+# Installation (do this once)
+Follow the instructions from the brms readme: https://github.com/paul-buerkner/brms#faq
+
+1. Install the R package brms, i.e. 
+```{r}
+install.packages("brms", lib = "C:/Program Files/R/R-4.0.4/library")
+
+.libPaths()
+```
+
+2. Install a C++ compiler:
+- Windows: The program Rtools (available on https://cran.r-project.org/bin/windows/Rtools/) comes with a C++ compiler for Windows. 
+- Mac: Install Xcode. 
+
+For further instructions 
+on how to get the compilers running, see the prerequisites section on
+https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started.
+
+```{r}
+#remove.packages("rstan")
+#if (file.exists(".RData")) file.remove(".RData")
+```
+
+```{r}
+#Sys.setenv(DOWNLOAD_STATIC_LIBV8 = 1) # only necessary for Linux without the nodejs library / headers
+#install.packages("rstan", repos = "https://cloud.r-project.org/", dependencies = TRUE)
+```
+
+```{r}
+#example(stan_model, package = "rstan", run.dontrun = TRUE)
+```
+
+```{r}
+# Compile packages using all cores
+Sys.setenv(MAKEFLAGS = paste0("-j",parallel::detectCores()))
+
+install.packages(c("StanHeaders","rstan"),type="source")
+```
+
+
+
+# Test that your installation is ready to go
+
+Load the library
+```{r}
+library(brms, lib.loc = "C:/Program Files/R/R-4.0.4/library")
+#install.packages("minqa", lib = "C:/Program Files/R/R-4.0.4/library")
+```
+
+Using the example from the brms readme: 
+
+Fit a model (takes a little while)
+```{r}
+fit1 <- brm(count ~ zAge + zBase * Trt + (1|patient), 
+            data = epilepsy, family = poisson())
+```
+
+and check some output
+```{r}
+summary(fit1) 
+plot(fit1, pars = c("Trt", "zBase")) 
+plot(conditional_effects(fit1, effects = "zBase:Trt"))
+```
+
+The end! 
