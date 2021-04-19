@@ -17,9 +17,14 @@ Follow the instructions from the brms readme: https://github.com/paul-buerkner/b
 
 1. Install the R package brms, i.e. 
 ```{r}
-install.packages("brms", lib = "C:/Program Files/R/R-4.0.4/library")
+#install.packages("brms", lib = "C:/Program Files/R/R-4.0.5/library")
 
-.libPaths()
+#.libPaths()
+
+myPaths <- .libPaths()   # get the paths
+myPaths <- c(myPaths[2], myPaths[1])  # switch them
+.libPaths(myPaths)  # reassign them
+
 ```
 
 2. Install a C++ compiler:
@@ -31,24 +36,65 @@ on how to get the compilers running, see the prerequisites section on
 https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started.
 
 ```{r}
-#remove.packages("rstan")
-#if (file.exists(".RData")) file.remove(".RData")
+remove.packages("rstan", lib = "C:/Program Files/R/R-4.0.5/library")
+remove.packages("rstan")
+if (file.exists(".RData")) file.remove(".RData")
 ```
 
 ```{r}
-#Sys.setenv(DOWNLOAD_STATIC_LIBV8 = 1) # only necessary for Linux without the nodejs library / headers
-#install.packages("rstan", repos = "https://cloud.r-project.org/", dependencies = TRUE)
+Sys.setenv(DOWNLOAD_STATIC_LIBV8 = 1) # only necessary for Linux without the nodejs library / headers
+install.packages("rstan", repos = "https://cloud.r-project.org/", dependencies = TRUE)
 ```
 
 ```{r}
-#example(stan_model, package = "rstan", run.dontrun = TRUE)
+example(stan_model, package = "rstan", run.dontrun = TRUE)
 ```
 
 ```{r}
+remotes::install_github("paul-buerkner/brms")
+```
+
+```{r}
+(myPaths <- .libPaths())   # get the paths
+myPaths <- c(myPaths[2], myPaths[1])  # switch them
+.libPaths(myPaths)  # reassign them
+```
+
+
+
+
+```{r}
+#Compile packages using all cores
+#Sys.setenv(MAKEFLAGS = paste0("-j",parallel::detectCores()))
+
+#install.packages(c("StanHeaders","rstan"),type="source")
+```
+
+
+
+```{r}
+example(stan_model, package = "rstan", run.dontrun = TRUE)
+```
+
+
+
+
+
+```{r}
+Sys.which("make")
+
+```
+
+
+```{r}
+library(brms)
+library(rstan, lib.loc = "C:/Program Files/R/R-4.0.5/library")
+
+
 # Compile packages using all cores
 Sys.setenv(MAKEFLAGS = paste0("-j",parallel::detectCores()))
 
-install.packages(c("StanHeaders","rstan"),type="source")
+install.packages(c("StanHeaders","rstan"),type="source", lib.loc = "C:/Program Files/R/R-4.0.5/library")
 ```
 
 
@@ -57,14 +103,15 @@ install.packages(c("StanHeaders","rstan"),type="source")
 
 Load the library
 ```{r}
-library(brms, lib.loc = "C:/Program Files/R/R-4.0.4/library")
-#install.packages("minqa", lib = "C:/Program Files/R/R-4.0.4/library")
+library(brms)
 ```
 
 Using the example from the brms readme: 
 
 Fit a model (takes a little while)
 ```{r}
+library(brms)
+#install.packages("plyr", lib = "C:/Program Files/R/R-4.0.5/library")
 fit1 <- brm(count ~ zAge + zBase * Trt + (1|patient), 
             data = epilepsy, family = poisson())
 ```

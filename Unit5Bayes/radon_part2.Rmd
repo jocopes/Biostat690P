@@ -1,0 +1,207 @@
+---
+title: "Bayesian inference for radon data - part II"
+author: "Leontine Alkema"
+date: "April 14 2021"
+output: 
+  pdf_document:
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(tidyverse)
+library(brms)
+library(ggmcmc) # used to make density plots for priors and posteriors 
+```
+
+# Radon
+
+Read in the data and process (little more than we need for just estimating mean radon)
+```{r}
+# house level data
+d <- read.table(url("http://www.stat.columbia.edu/~gelman/arm/examples/radon/srrs2.dat"), header=T, sep=",")
+
+# deal with zeros, select what we want, make a fips (county) variable to match on 
+d <- d %>% 
+  mutate(activity = ifelse(activity==0, 0.1, activity)) %>% 
+  mutate(fips = stfips * 1000 + cntyfips) %>%   
+  dplyr::select(fips, state, county, floor, activity)
+
+# county level data
+cty <- read.table(url("http://www.stat.columbia.edu/~gelman/arm/examples/radon/cty.dat"), header = T, sep = ",")
+cty <- cty %>% mutate(fips = 1000 * stfips + ctfips) %>% dplyr::select(fips, Uppm)
+
+# filter to just be minnesota, join them and then select the variables of interest. 
+dmn <- d %>% 
+  filter(state=="MN") %>% 
+  dplyr::select(fips, county, floor, activity) %>% 
+  left_join(cty)
+
+# to focus on log radon measurements
+y <- log(dmn$activity)
+
+# easy tibble to work with predictors later on
+dat <- 
+  dmn%>%
+  mutate(y = log(activity))
+
+```
+
+
+# Fit a Bayesian model! 
+
+Default MCMC settings: 
+```{r}
+fit0 <- brm(y ~ 1, data = tibble(y))
+```
+
+Updating some MCMC settings for faster fitting. Note that you don't get info on progress below the chunk anymore, just in the Viewer on the right.
+```{r}
+fit1 <- brm(y ~ 1, data = tibble(y),
+           # mcmc settings:
+           iter = 1000, cores = getOption("mc.cores", 4), 
+           sample_prior = "yes") # to be explained below
+```
+
+Note that the object fit1 now contains lots of info, we will go through some here 
+```{r}
+names(fit1)
+```
+
+
+## MCMC diagnostics 
+Traceplots and posterior densities (one per chain, ignore the ones with prior_)
+```{r}
+plot(fit1, pars = c("Intercept", "sigma")) 
+```
+
+Check Rhat and effective sample size
+```{r}
+summary(fit1) 
+#names(summary(fit1))
+summary(fit1)$fixed
+summary(fit1)$spec_pars
+```
+
+## Model fit
+
+Model summary
+```{r}
+summary(fit1)
+```
+
+You can pull out whatever quantiles you're interested in
+```{r}
+posterior_summary(fit1, probs = c(.025, .25, .75, .975))
+posterior_summary(fit1, probs = c(.025, .25, .75, .975), pars = "b_Intercept")
+```
+
+## Comparing priors and posteriors 
+
+Priors are given in the stan model, and also documented here (for internal parameters)
+```{r}
+fit1$prior 
+```
+
+An easy way to compare prior and posterior densities, without having to look into prior spec, is to have brm save samples from the priors in the fit object. That's what the argument   `sample_prior = "yes"' does (then posterior samples are added as well).
+
+you can pull out the samples using these functions: 
+```{r}
+prior <- prior_samples(fit1)
+post <- posterior_samples(fit1)
+head(prior)
+head(post)
+```
+
+For density plots, I find this code below to work well EXCEPT that the argument to exclude warmup seems to be ignored... 
+
+```{r}
+model1tranformed_ww <- ggs(fit1, inc_warmup = FALSE) 
+# creates tibble with samples in long form but does NOT exclude warmup
+head(model1tranformed_ww)
+max(model1tranformed_ww$Iteration)
+```
+so I excluded it here manually based on hardcoding.
+
+```{r}
+model1tranformed <- ggs(fit1, inc_warmup = FALSE) %>%
+  filter(Iteration > 500) # warmup is hardcoded, check your settings!
+```
+
+Now plot
+```{r}
+model1tranformed %>%
+  filter(Parameter %in% c("prior_Intercept", "b_Intercept")) %>%
+  ggplot(aes(x = value, fill = Parameter)) +
+  geom_density(alpha = .5) 
+
+model1tranformed %>%
+  filter(Parameter %in% c("prior_sigma", "sigma")) %>%
+  ggplot(aes(x = value, fill = Parameter)) +
+  geom_density(alpha = .5)   
+```
+brm allows for user-defined priors as well. Let's try it out with a very informative prior for mu. 
+
+```{r}
+prior1 <- c(set_prior("normal(-25,.1)", class = "Intercept"))
+fit3 <- brm(y ~ 1, family = gaussian(), data = tibble(y), sample_prior = "yes",
+            # extreme prior on intercept
+            prior = prior1
+            )
+```
+
+```{r}
+fit3
+```
+
+```{r}
+model3tranformed <- ggs(fit3, inc_warmup = FALSE) %>%
+  filter(Iteration > 500) # warmup is hardcoded, check your settings!
+```
+
+
+```{r}
+model3tranformed %>%
+  filter(Parameter %in% c("prior_Intercept", "b_Intercept")) %>%
+  ggplot(aes(x = value, fill = Parameter)) +
+  geom_density(alpha = .5) 
+
+model1tranformed %>%
+  filter(Parameter %in% c("prior_sigma", "sigma")) %>%
+  ggplot(aes(x = value, fill = Parameter)) +
+  geom_density(alpha = .5) 
+```
+## MCMC settings - follow up
+
+Would the fit still be ok for a smaller number of iterations?
+```{r}
+fit_sosilly <- brm(y ~ 1, data = tibble(y),
+           # mcmc settings (make it non-parallel to have output show up 
+           # in knitted   document)
+           iter = 200)
+fit_sosilly
+```
+
+
+# The illustration for MC approximation
+
+```{r}
+set.seed(1234)
+samp <- rnorm(30)
+tibble(samp) %>%
+  ggplot() +
+  geom_histogram(aes(x = samp, y =..density..), fill = "green", alpha = 0.5) +
+  stat_function(fun = dnorm, args = list(mean = 0, sd = 1)) +
+  ggtitle("30 samples")
+set.seed(1234)
+samp <- rnorm(10000)
+mean(samp)
+tibble(samp) %>%
+  ggplot() +
+  geom_histogram(aes(x = samp, y =..density..), fill = "green", alpha = 0.5) +
+  stat_function(fun = dnorm, args = list(mean = 0, sd = 1)) +
+ ggtitle("10K samples")
+
+  
+```
+
